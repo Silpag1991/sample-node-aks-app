@@ -1,6 +1,6 @@
 replicaCount: 2
 image:
-  repository: <YOUR_ACR_NAME>.azurecr.io/sample-node-app
+  repository: aksdemocri.azurecr.io/sample-node-app
   tag: latest
   pullPolicy: Always
 service:
