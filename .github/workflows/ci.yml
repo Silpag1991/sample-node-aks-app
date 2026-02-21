@@ -1,63 +1,25 @@
-name: CI-CD Pipeline
+name: Build and Push Image
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v3
 
-    # Checkout
-    - name: Checkout Code
-      uses: actions/checkout@v4
+      - name: Login to ACR
+        uses: azure/docker-login@v1
+        with:
+          login-server: ${{ secrets.ACR_LOGIN_SERVER }}
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
 
-    # Node Setup
-    - name: Setup Node
-      uses: actions/setup-node@v4
-      with:
-        node-version: 18
-
-    # Install
-    - name: Install Dependencies
-      run: npm install
-
-    # Test
-    - name: Run Tests
-      run: npm test || echo "No tests"
-
-    # Sonar Scan
-    - name: SonarQube Scan
-      uses: SonarSource/sonarqube-scan-action@v2
-      env:
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        SONAR_HOST_URL: http://172.184.149.127:9000
-
-    # Azure Login
-    - name: Azure Login
-      uses: azure/login@v1
-      with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-    # ACR Login
-    - name: Login to ACR
-      run: az acr login --name aksdemocri
-
-    # Docker Build
-    - name: Build Docker Image
-      run: |
-        docker build -t aksdemocri.azurecr.io/sample-node:${{ github.sha }} .
-
-    # Push Image
-    - name: Push Image
-      run: |
-        docker push aksdemocri.azurecr.io/sample-node:${{ github.sha }}
-
-    # AKS Deploy
-    - name: Deploy to AKS
-      run: |
-        az aks get-credentials --resource-group myAKSResourceGroup --name myAKSCluster --overwrite-existing
-        kubectl set image deployment/sample-node sample-node=aksdemocri.azurecr.io/sample-node:${{ github.sha }}
+      - name: Build and Push
+        run: |
+          docker build -t ${{ secrets.ACR_LOGIN_SERVER }}/sample-node-app:latest .
+          docker push ${{ secrets.ACR_LOGIN_SERVER }}/sample-node-app:latest
