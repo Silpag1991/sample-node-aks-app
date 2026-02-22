@@ -1,0 +1,21 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: javaapp.test
+  namespace: argocd
+spec:
+  project: default
+
+  source:
+    repoURL: https://github.com/Silpag1991/sample-node-aks-app.git
+    targetRevision: main
+    path: helm/sample-node-app
+
+  destination:
+  server: https://kubernetes.default.svc
+  namespace: argocd
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
